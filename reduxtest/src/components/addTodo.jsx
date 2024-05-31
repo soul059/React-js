@@ -1,16 +1,38 @@
-import React, { useState } from 'react'
-import { useDispatch } from 'react-redux'
-import { addTodo } from '../features/Todo/todoSlice'
+import React, { useEffect, useRef, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { addTodo, changeEdit, editTodo } from '../features/Todo/todoSlice'
 
 function AddTodo() {
     const [input, setInput] = useState('')
+    const btnref = useRef(null)
     const dispatch = useDispatch()
+    const Todos = useSelector(state => state.todos)
+    const editing = useSelector(state => state.editTodo)
 
     const addTodoHandler = (e) =>{
-        e.preventDefault()
-        dispatch(addTodo(input))
+      e.preventDefault()
+      const todo = Todos.find(todo => todo.editing === true)
+        if(todo){
+          dispatch(changeEdit(todo.id))
+          dispatch(editTodo({id: todo.id, text: input}))
+        }
+        else{
+          dispatch(addTodo(input))
+
+        }
         setInput("")
     }
+    useEffect(() => {
+      const todo =Todos.find(todo => todo.editing === true)
+      if(todo){
+        setInput(todo.text)
+        btnref.current.innerText = "Edit Todo"
+      }
+      else{
+        setInput("")
+        btnref.current.innerText = "Add Todo"
+      }
+    }, [editing])
 
     return (
         <form onSubmit={addTodoHandler} className="space-x-3 mt-12">
@@ -24,6 +46,7 @@ function AddTodo() {
           <button
             type="submit"
             className="text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded text-lg"
+            ref={btnref}
           >
             Add Todo
           </button>
